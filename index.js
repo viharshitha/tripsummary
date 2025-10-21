@@ -52,6 +52,7 @@ Interests: ${tripData.interests.join(", ")}
       }
     };
   } catch (error) {
+    console.error("OpenAI error:", error);
     context.res = {
       status: 500,
       body: {
