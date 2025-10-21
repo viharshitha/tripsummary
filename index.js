@@ -1,67 +1,49 @@
-const { OpenAI } = require("openai");
+import { AzureOpenAI } from "openai";
 
-const openai = new OpenAI({
+const client = new AzureOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_ENDPOINT,
+  apiVersion: process.env.OPENAI_API_VERSION,
+  endpoint: process.env.OPENAI_ENDPOINT,
+  deployment: process.env.OPENAI_DEPLOYMENT_ID
 });
 
-module.exports = async function (context, req) {
-  const tripData = req.body;
-
-  console.log("Received payload:", tripData);
-  console.log(
-    "OPENAI_API_KEY:",
-    process.env.OPENAI_API_KEY ? "Present" : "Missing"
-  );
-  console.log(
-    "OPENAI_ENDPOINT:",
-    process.env.OPENAI_ENDPOINT ? "Present" : "Missing"
-  );
-
-  if (!tripData || Object.keys(tripData).length === 0) {
-    context.res = {
-      status: 400,
-      body: { error: "Missing or empty trip data in request body." },
-    };
-    return;
-  }
-
-  const prompt = `
-You are a trip analysis assistant. Based on the following trip data, generate:
-1. A concise summary of the trip.
-2. 3–5 actionable suggestions to improve future trips.
-
-Trip Data:
-${JSON.stringify(tripData, null, 2)}
-`;
-
+export default async function (context, req) {
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
+    const { destination, duration, interests } = req.body;
+
+    if (!destination || !duration || !interests || !Array.isArray(interests)) {
+      context.res = {
+        status: 400,
+        body: { error: "Missing or invalid input. Provide destination, duration, and interests array." }
+      };
+      return;
+    }
+
+    const prompt = `Plan a ${duration} trip to ${destination} focused on ${interests.join(", ")}. Include a summary and 3 suggestions.`;
+
+    const response = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are a helpful travel planner." },
+        { role: "user", content: prompt }
+      ],
+      max_tokens: 1024,
+      temperature: 0.7
     });
 
-    const result = completion.choices[0].message.content;
-
-    // Split response into summary and suggestions
-    const [summaryPart, suggestionsPart] = result.split(/Suggestions:/i);
-    const suggestions = suggestionsPart
-      ?.split(/\n+/)
-      .filter((s) => s.trim())
-      .map((s) => s.replace(/^\d+[\.\)]?\s*/, ""));
+    const content = response.choices[0].message.content;
 
     context.res = {
       status: 200,
-      body: {
-        summary: summaryPart?.trim(),
-        suggestions: suggestions || [],
-      },
+      body: { summary: content }
     };
   } catch (error) {
+    console.error("OpenAI error:", error);
     context.res = {
       status: 500,
-      body: { error: error.message },
+      body: {
+        error: error.message,
+        details: error.response?.data || null
+      }
     };
   }
-};
+}
