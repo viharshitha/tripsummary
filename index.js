@@ -10,16 +10,10 @@ const client = new AzureOpenAI({
 export default async function (context, req) {
   const tripData = req.body;
 
-  console.log("Received payload:", tripData);
-  console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? "Present" : "Missing");
-  console.log("OPENAI_ENDPOINT:", process.env.OPENAI_ENDPOINT ? "Present" : "Missing");
-  console.log("OPENAI_DEPLOYMENT_ID:", process.env.OPENAI_DEPLOYMENT_ID || "Missing");
-  console.log("OPENAI_API_VERSION:", process.env.OPENAI_API_VERSION || "Missing");
-
-  if (!tripData || Object.keys(tripData).length === 0) {
+  if (!tripData || !tripData.destination || !tripData.duration || !Array.isArray(tripData.interests)) {
     context.res = {
       status: 400,
-      body: { error: "Missing or empty trip data in request body." }
+      body: { error: "Missing destination, duration, or interests in request body." }
     };
     return;
   }
@@ -30,7 +24,9 @@ You are a trip analysis assistant. Based on the following trip data, generate:
 2. 3–5 actionable suggestions to improve future trips.
 
 Trip Data:
-${JSON.stringify(tripData, null, 2)}
+Destination: ${tripData.destination}
+Duration: ${tripData.duration}
+Interests: ${tripData.interests.join(", ")}
 `;
 
   try {
@@ -56,7 +52,6 @@ ${JSON.stringify(tripData, null, 2)}
       }
     };
   } catch (error) {
-    console.error("OpenAI error:", error);
     context.res = {
       status: 500,
       body: {
