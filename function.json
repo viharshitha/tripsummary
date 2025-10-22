@@ -1,4 +1,6 @@
 {
+  "scriptFile": "index.js",
+  "entryPoint": "default",
   "bindings": [
     {
       "authLevel": "function",
