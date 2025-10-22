@@ -1,10 +1,9 @@
-import { AzureOpenAI } from "openai";
+import OpenAI from "openai";
 
-const client = new AzureOpenAI({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  apiVersion: process.env.OPENAI_API_VERSION,
-  endpoint: process.env.OPENAI_ENDPOINT,
-  deployment: process.env.OPENAI_DEPLOYMENT_ID
+  baseURL: `${process.env.OPENAI_ENDPOINT}/openai/deployments/${process.env.OPENAI_DEPLOYMENT_ID}`,
+  defaultQuery: { "api-version": process.env.OPENAI_API_VERSION }
 });
 
 export default async function (context, req) {
@@ -30,7 +29,8 @@ Interests: ${tripData.interests.join(", ")}
 `;
 
   try {
-    const response = await client.chat.completions.create({
+    const response = await openai.chat.completions.create({
+      model: process.env.OPENAI_DEPLOYMENT_ID,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
       max_tokens: 1024
