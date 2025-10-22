@@ -60,4 +60,4 @@ jobs:
           app-name: 'tripsummaryfunction'
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F9208163DC5D44C48F2644B8BEB2462A }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CBBC34753A0948408CEB8FDDC883ADEF }}
