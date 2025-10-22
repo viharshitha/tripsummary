@@ -28,6 +28,13 @@ Duration: ${tripData.duration}
 Interests: ${tripData.interests.join(", ")}
 `;
 
+console.log("Calling OpenAI with:");
+console.log("baseURL:", `${process.env.OPENAI_ENDPOINT}/openai/deployments/${process.env.OPENAI_DEPLOYMENT_ID}`);
+console.log("apiKey:", process.env.OPENAI_API_KEY ? "Present" : "Missing");
+console.log("apiVersion:", process.env.OPENAI_API_VERSION);
+console.log("deployment:", process.env.OPENAI_DEPLOYMENT_ID);
+
+
   try {
     const response = await openai.chat.completions.create({
       model: process.env.OPENAI_DEPLOYMENT_ID,
